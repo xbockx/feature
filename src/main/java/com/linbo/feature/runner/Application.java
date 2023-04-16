@@ -141,7 +141,7 @@ public class Application {
         if (!CollectionUtils.isEmpty(exec)) {
             log.info("编译运行完成");
             PairServiceImpl pairService = new PairServiceImpl(exec);
-            pairService.diffReplace();
+            pairService.processAll();
         }
 
         // 结果写入

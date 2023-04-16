@@ -25,6 +25,8 @@ public class PairServiceImpl {
 
     private List<Result> sorted;
 
+    private List<Result> tmp;
+
     List<ResultPair> res = new ArrayList<>();
 
     public PairServiceImpl(List<Result> exec) {
@@ -36,6 +38,74 @@ public class PairServiceImpl {
             return o1.getSource().getStudentId().compareTo(o2.getSource().getStudentId());
         }).collect(Collectors.toList());
         this.sorted = sorted;
+        this.tmp = sorted;
+    }
+
+    private void reset() {
+        this.sorted = this.tmp;
+        this.res.clear();
+    }
+
+    public void processAll() {
+        diffBefore();
+        reset();
+        diffReplace();
+        reset();
+        simple();
+    }
+
+    /**
+     * 第一个全部通过
+     * 比较该节点前面所有编译失败
+     * diff size == 1
+     */
+    public void diffBefore() {
+        for (int i = 0; i < sorted.size() - 1; i++) {
+            List<Result> firstList = new ArrayList<>();
+            Result second = null;
+            while (i < sorted.size() - 1 && sorted.get(i).getSource().getStudentId().equals(sorted.get(i + 1).getSource().getStudentId())) {
+                // first == null &&  compile fail
+                Result curr = sorted.get(i);
+                Result next = sorted.get(i + 1);
+                if (second == null && curr.getCompileStatus().equals(ResultCode.COMPILE_FAIL.value)) {
+                    firstList.add(curr);
+                    // case: f f f t
+                    if (next.getCompileStatus().equals(ResultCode.COMPILE_SUCCESS.value) && next.getPassTestNum() == next.getTestCount()) {
+                        second = next;
+                    }
+                }
+                if (curr.getCompileStatus().equals(ResultCode.COMPILE_SUCCESS.value) && next.getCompileStatus().equals(ResultCode.COMPILE_SUCCESS.value)) {
+                    // case: f f f _ _ t
+                    if (next.getPassTestNum() == next.getTestCount()) {
+                        second = next;
+                    }
+                }
+
+                if (firstList.size() > 0 && second != null) {
+                    for (Result first : firstList) {
+                        if (first.getSource().getCode() == null || second.getSource().getCode() == null) {
+                            continue;
+                        }
+                        Patch<String> diffRes = DiffUtils.diff(first.getSource().getCode(), second.getSource().getCode(), null);
+                        final List<AbstractDelta<String>> deltas = diffRes.getDeltas();
+                        if (deltas.size() == 1) {
+                            final AbstractDelta<String> delta = deltas.get(0);
+                            if (delta.getSource().getLines().size() <= 3 ||  delta.getTarget().getLines().size() <= 3) {
+                                ResultPair pair = new ResultPair(first, second);
+                                res.add(pair);
+                            }
+                        }
+                    }
+                    second = null;
+                }
+                i++;
+            }
+            firstList.clear();
+        }
+        final List<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toList());
+        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_全部通过之前所有错误DIFF为1.xlsx", ExportPair.class)
+                .sheet()
+                .doWrite(collect);
     }
 
     /**
@@ -51,6 +121,7 @@ public class PairServiceImpl {
                 // first == null &&  compile fail
                 Result curr = sorted.get(i);
                 Result next = sorted.get(i + 1);
+                i++;
                 if (curr.getCompileStatus().equals(ResultCode.COMPILE_FAIL.value) && next.getCompileStatus().equals(ResultCode.COMPILE_SUCCESS.value)) {
                     // case: f f f t
                     first = curr;
@@ -65,6 +136,9 @@ public class PairServiceImpl {
                 }
 
                 if (first != null && second != null) {
+                    if (first.getSource().getCode() == null || second.getSource().getCode() == null) {
+                        continue;
+                    }
                     Patch<String> diffRes = DiffUtils.diff(first.getSource().getCode(), second.getSource().getCode(), null);
                     final List<AbstractDelta<String>> deltas = diffRes.getDeltas();
                     for (int j = 0; j < deltas.size(); j++) {
@@ -73,20 +147,18 @@ public class PairServiceImpl {
                             break;
                         }
                         if (j == deltas.size() - 1) {
-                            final List<String> lines = delta.getSource().getLines();
-                            final List<Integer> changePosition = delta.getSource().getChangePosition();
                             final List<String> targetSplit = Arrays.stream(second.getSource().getCode().split("\n")).collect(Collectors.toList());
                             if (delta.getType().equals(DeltaType.DELETE)) {
-                                for (Integer index : changePosition) {
-                                    targetSplit.remove(lines.get(changePosition.get(0)));
+                                for (int k = delta.getSource().getLines().size() - 1; k >= 0 ; k--) {
+                                    targetSplit.remove(delta.getTarget().getPosition());
                                 }
                             } else if (delta.getType().equals(DeltaType.CHANGE)) {
                                 for (int k = 0; k < delta.getSource().getLines().size(); k++) {
                                     targetSplit.set(delta.getTarget().getPosition() + k, delta.getSource().getLines().get(k));
                                 }
                             } else if (delta.getType().equals(DeltaType.INSERT)) {
-                                for (Integer index : changePosition) {
-                                    targetSplit.add(lines.get(index));
+                                for (int k = 0; k < delta.getSource().getLines().size(); k++) {
+                                    targetSplit.add(delta.getTarget().getPosition() + k, delta.getSource().getLines().get(k));
                                 }
                             }
                             StringBuilder builder = new StringBuilder();
@@ -101,11 +173,10 @@ public class PairServiceImpl {
                     first = null;
                     second = null;
                 }
-                i++;
             }
         }
         final List<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toList());
-        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + ".xlsx", ExportPair.class)
+        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_全部通过替换最后错误.xlsx", ExportPair.class)
                 .sheet()
                 .doWrite(collect);
     }
@@ -144,7 +215,7 @@ public class PairServiceImpl {
             }
         }
         final List<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toList());
-        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + ".xlsx", ExportPair.class)
+        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_最后语法第一部分.xlsx", ExportPair.class)
                 .sheet()
                 .doWrite(collect);
     }
