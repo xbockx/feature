@@ -1,5 +1,5 @@
 path:
-  execute: C:/Users/imlin/Desktop/exe_53.xlsx
+  execute: C:/Users/imlin/Desktop/exe/exe_53.xlsx
   testcase: C:/Users/imlin/Desktop/tc.xlsx
   root: C:/tmp/test/
   export: C:/tmp/test/export/

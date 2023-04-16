@@ -72,7 +72,7 @@ public abstract class AbstractRunner implements IRunner {
             log.debug("[run]: filename: {}, output: {}", filename, outResult);
 
             if (outResult.isEmpty()) {
-                log.info("[result empty]: {}: {}", filename, input);
+                log.debug("[result empty]: {}: {}", filename, input);
             }
             result.setRunResult(outResult);
             process.destroy();
