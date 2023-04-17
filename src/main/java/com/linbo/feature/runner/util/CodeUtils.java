@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 public class CodeUtils {
 
     public static Pattern printfPattern = Pattern.compile(".*printf *\\(.*\\)");
+
+    public static Pattern printfEmptyPattern = Pattern.compile(".*printf *\\(\"\"\\)");
     public static Pattern scanfPattern = Pattern.compile(".*scanf *\\(.*\\)");
 //    public static Set<Character> pSet = new HashSet<>(Arrays.asList('d', 'i', 'o', 'u', 'x', 'X', 'f', 'e', 'E', 'g', 'G', 'c', 's', 'p', 'n'));
     public static Pattern placeholder = Pattern.compile("%[0-9]*\\.*[0-9]*(d|i|o|u|x|X|f|e|E|g|G|c|s|p|n|lf)");
@@ -36,7 +38,9 @@ public class CodeUtils {
             if (printfPattern.matcher(line).find()) {
 //                System.out.println("[pre]: " + line);
                 String c = conv(line, "printf");
-                builder.append(c).append('\n');
+                if (!printfEmptyPattern.matcher(line).find()) {
+                    builder.append(c).append('\n');
+                }
 //                System.out.println("[post]: " + c);
             } else if (scanfPattern.matcher(line).find()) {
                 String c = conv(line, "scanf");

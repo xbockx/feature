@@ -1,11 +1,11 @@
 path:
-  execute: C:/Users/imlin/Desktop/exe/exe_53.xlsx
-  testcase: C:/Users/imlin/Desktop/tc.xlsx
-  root: C:/tmp/test/
-  export: C:/tmp/test/export/
+  execute: C:/Users/Administrator/Desktop/exe/exe_53.xlsx
+  testcase: C:/Users/Administrator/Desktop/tc.xlsx
+  root: C:/Users/Administrator/Desktop/other/tmp/
+  export: C:/Users/Administrator/Desktop/other/tmp/export/
 
 multi-thread: false
 judge-type: number
 judge-case: contains
 
-name: 53
+name: 54

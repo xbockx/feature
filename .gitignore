@@ -26,3 +26,6 @@ package.zip
 print_replace.xlsx
 test.xlsx
 logs
+
+.idea
+target

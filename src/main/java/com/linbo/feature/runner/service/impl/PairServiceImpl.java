@@ -8,12 +8,9 @@ import com.github.difflib.patch.Patch;
 import com.linbo.feature.runner.Application;
 import com.linbo.feature.runner.domain.Result;
 import com.linbo.feature.runner.domain.ResultCode;
-import com.linbo.feature.runner.service.PairService;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -90,7 +87,7 @@ public class PairServiceImpl {
                         final List<AbstractDelta<String>> deltas = diffRes.getDeltas();
                         if (deltas.size() == 1) {
                             final AbstractDelta<String> delta = deltas.get(0);
-                            if (delta.getSource().getLines().size() <= 3 ||  delta.getTarget().getLines().size() <= 3) {
+                            if (delta.getSource().getLines().size() <= 3 &&  delta.getTarget().getLines().size() <= 3) {
                                 ResultPair pair = new ResultPair(first, second);
                                 res.add(pair);
                             }
@@ -102,8 +99,8 @@ public class PairServiceImpl {
             }
             firstList.clear();
         }
-        final List<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toList());
-        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_全部通过之前所有错误DIFF为1.xlsx", ExportPair.class)
+        final Set<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toSet());
+        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_PROC1.xlsx", ExportPair.class)
                 .sheet()
                 .doWrite(collect);
     }
@@ -148,19 +145,21 @@ public class PairServiceImpl {
                         }
                         if (j == deltas.size() - 1) {
                             final List<String> targetSplit = Arrays.stream(second.getSource().getCode().split("\n")).collect(Collectors.toList());
-                            if (delta.getType().equals(DeltaType.DELETE)) {
-                                for (int k = delta.getSource().getLines().size() - 1; k >= 0 ; k--) {
-                                    targetSplit.remove(delta.getTarget().getPosition());
-                                }
-                            } else if (delta.getType().equals(DeltaType.CHANGE)) {
+                            if (delta.getType().equals(DeltaType.CHANGE)) {
                                 for (int k = 0; k < delta.getSource().getLines().size(); k++) {
                                     targetSplit.set(delta.getTarget().getPosition() + k, delta.getSource().getLines().get(k));
                                 }
-                            } else if (delta.getType().equals(DeltaType.INSERT)) {
-                                for (int k = 0; k < delta.getSource().getLines().size(); k++) {
-                                    targetSplit.add(delta.getTarget().getPosition() + k, delta.getSource().getLines().get(k));
-                                }
                             }
+//                            if (delta.getType().equals(DeltaType.DELETE)) {
+//                                for (int k = delta.getSource().getLines().size() - 1; k >= 0 ; k--) {
+//                                    targetSplit.remove(delta.getTarget().getPosition());
+//                                }
+//                            }
+//                            if (delta.getType().equals(DeltaType.INSERT)) {
+//                                for (int k = 0; k < delta.getSource().getLines().size(); k++) {
+//                                    targetSplit.add(delta.getTarget().getPosition() + k, delta.getSource().getLines().get(k));
+//                                }
+//                            }
                             StringBuilder builder = new StringBuilder();
                             for (String s : targetSplit) {
                                 builder.append(s).append("\n");
@@ -175,8 +174,8 @@ public class PairServiceImpl {
                 }
             }
         }
-        final List<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toList());
-        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_全部通过替换最后错误.xlsx", ExportPair.class)
+        final Set<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toSet());
+        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_PROC2.xlsx", ExportPair.class)
                 .sheet()
                 .doWrite(collect);
     }
@@ -214,20 +213,33 @@ public class PairServiceImpl {
                 i++;
             }
         }
-        final List<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toList());
-        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_最后语法第一部分.xlsx", ExportPair.class)
+        final Set<ExportPair> collect = res.stream().map(r -> new ExportPair(r.lastError.getSource().getCode(), r.firstPass.getSource().getCode())).collect(Collectors.toSet());
+        EasyExcel.write(Application.config.getExportPath() + "/pair/" + Application.config.getName() + "_PROC3.xlsx", ExportPair.class)
                 .sheet()
                 .doWrite(collect);
     }
 
     @Data
     private static class ExportPair {
-        String lastError;
-        String firstPass;
+        String error;
+        String correct;
 
         ExportPair(String lastError, String firstPass) {
-            this.lastError = lastError;
-            this.firstPass = firstPass;
+            this.error = lastError;
+            this.correct = firstPass;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ExportPair that = (ExportPair) o;
+            return Objects.equals(error, that.error) && Objects.equals(correct, that.correct);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(error, correct);
         }
     }
 
@@ -242,6 +254,7 @@ public class PairServiceImpl {
             this.lastError = lastError;
             this.firstPass = firstPass;
         }
+
     }
 
 }

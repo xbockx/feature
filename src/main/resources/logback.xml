@@ -3,7 +3,6 @@
     <contextName>logback</contextName>
     <property name="dir" value="./logs"/>
 
-    <contextListener class="com.ofpay.logback.TtlMdcListener"/>
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <charset>UTF-8</charset>
@@ -35,11 +34,11 @@
 
     <root>
         <appender-ref ref="console"/>
-        <appender-ref ref="info"/>
+        <appender-ref ref="error"/>
     </root>
     <logger name="com.linbo.feature" additivity="false">
         <appender-ref ref="console"/>
-        <appender-ref ref="info"/>
+        <appender-ref ref="error"/>
     </logger>
 
 </configuration>
