@@ -202,7 +202,6 @@ public class CodeUtils {
             if (i == 19) {
                 System.out.println("");
             }
-//            System.out.println("========" + i + "==============");
             Cat cat = list.get(i);
             try {
                 final String standardize = obj.format(cat.getCode());

@@ -1,11 +1,17 @@
 path:
+  # 执行文件
   execute: C:/Users/Administrator/Desktop/exe/exe_53.xlsx
+  # 测试用例
   testcase: C:/Users/Administrator/Desktop/tc.xlsx
   root: C:/Users/Administrator/Desktop/other/tmp/
   export: C:/Users/Administrator/Desktop/other/tmp/export/
 
-multi-thread: false
-judge-type: number
-judge-case: contains
-
 name: 54
+multi-thread: false
+
+judge:
+  # 输出结果是数值的: number  输出结果是字符串的: string
+  type: number
+  # 如果judge-type设置为string的话 最后的结果比对要求完全相等的话设置为equal， 要求包含的话设置为contains
+  case: contains
+

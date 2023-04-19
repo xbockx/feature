@@ -10,12 +10,10 @@ import com.linbo.feature.runner.config.BaseConfig;
 import com.linbo.feature.runner.core.FileService;
 import com.linbo.feature.runner.domain.Record;
 import com.linbo.feature.runner.domain.Result;
-import com.linbo.feature.runner.domain.ResultCode;
 import com.linbo.feature.runner.domain.TestCase;
 import com.linbo.feature.runner.service.impl.PairServiceImpl;
 import com.linbo.feature.runner.service.impl.RunServiceImpl;
 import com.linbo.feature.runner.util.CodeUtils;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
@@ -31,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @Description
@@ -162,20 +159,21 @@ public class Application {
             Map<String, Object> map = yaml.load(is);
             final String name = String.valueOf(map.get("name"));
             final Boolean startMultiThread = Boolean.valueOf(String.valueOf(map.get("multi-thread")));
-            final String judgeType = String.valueOf(map.get("judge-type"));
-            final String judgeCase = String.valueOf(map.get("judge-case"));
-            final Map<String, String> subMap = (Map<String, String>) map.get("path");
-            final String execute = subMap.get("execute");
-            final String testcase = subMap.get("testcase");
-            final String root = subMap.get("root");
-            final String export = subMap.get("export");
+            final Map<String, String> pathMap = (Map<String, String>) map.get("path");
+            final String execute = pathMap.get("execute");
+            final String testcase = pathMap.get("testcase");
+            final String root = pathMap.get("root");
+            final String export = pathMap.get("export");
+            final Map<String, String> judgeMap = (Map<String, String>) map.get("judge");
+            final String judgeType = judgeMap.get("type");
+            final String judgeCase = judgeMap.get("case");
             config.setExecutePath(execute);
             config.setTestcasePath(testcase);
             config.setRootPath(root);
             config.setExportPath(export);
             config.setName(name);
-            config.setJudgeType(judgeType);
             config.setStartMultiThread(startMultiThread);
+            config.setJudgeType(judgeType);
             config.setJudgeCase(judgeCase);
 
             if (Files.notExists(Paths.get(config.getRootPath()))) {

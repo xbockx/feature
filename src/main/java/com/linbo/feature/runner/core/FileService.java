@@ -195,7 +195,7 @@ public class FileService {
     public Map<Integer, List<TestCase>> getTestCases(List<TestCase> testCases) {
         Map<Integer, List<TestCase>> map = new HashMap<>();
         for (TestCase testCase : testCases) {
-            log.info("读取到一条TestCase数据{}", testCase.getId());
+            log.debug("读取到一条TestCase数据{}", testCase.getId());
             List<TestCase> list = map.get(testCase.getPid());
             if (list != null) {
                 list.add(testCase);

@@ -1,5 +1,6 @@
 package com.linbo.feature.runner.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.stream.Stream;
  * @Author xbockx
  * @Date 4/16/2023
  */
+@Slf4j
 public class ProcessBar {
 
     private static final char INCOMPLETE = '░'; // U+2591 Unicode Character 表示还没有完成的部分
@@ -31,6 +33,19 @@ public class ProcessBar {
         String progressBar = "\r" + builder;
         String percent = " " + (curr + 1) + "%";
         System.out.print(progressBar + percent);
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        Random random = new Random();
+        List<Integer> collect = Stream.generate(() -> random.nextInt()).limit(256).collect(Collectors.toList());
+        ProcessBar processBar = new ProcessBar(collect.size());
+        for (int i = 0; i < collect.size(); i++) {
+            Thread.sleep(10);
+            System.out.print("\rexecute - " + i);
+            processBar.setProcess(i);
+            Thread.sleep(10);
+            System.out.print("\rfinished - " + i);
+        }
     }
 
 }
